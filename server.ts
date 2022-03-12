@@ -186,7 +186,188 @@ const list_category = async (req: any, res: any) => {
                 if (categories.length === 0){
                     res.json({msg : "categories not found"})
                 }else{
+                    categories = categories.map((category: any) => { return category.name })
                     res.json({msg : "categories found", categories})
+                }
+            })
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// create expense --- function
+const create_expenses = async (req: any, res: any) => {
+    try{
+        const { name, amount, user_id, spending_date } = req.body
+        if (!name || !amount || !user_id || !spending_date){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            const user_is_exist = await db.User.findOne({
+                where : {id : user_id}
+            });
+            if (!user_is_exist){
+                res.json({msg : "user not found"})
+            }else{
+                const category = await db.Category.findOne({
+                    where : {
+                        name : name, 
+                        user_id : user_id
+                    }
+                });
+                if (!category){
+                    res.json({msg : "category not found"})
+                }else{
+                    db.Expenses.findOne({
+                        where : {
+                            user_id : user_id,
+                            category_id : category.id,
+                        }
+                    }).then((expense: any) => {
+                        if(!expense){
+                            const data = {
+                                user_id : user_id,
+                                category_id : category.id,
+                                spending_date : spending_date,
+                                amount : amount,
+                            }
+                            create_record("expenses",data)
+                            res.json({msg : "expense created"})
+                        }else{
+                            res.json({msg : "expense already exist"})
+                        }
+                    })
+                }
+            }
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// edit expense --- function
+const edit_expenses = async (req: any, res: any) => {
+    try{
+        const { name, new_amount, user_id, new_spending_date, new_name } = req.body
+        if (!name || !new_amount || !user_id || !new_spending_date || !new_name){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            const user_is_exist = await db.User.findOne({
+                where : {id : user_id}
+            });
+            if (!user_is_exist){
+                res.json({msg : "user not found"})
+            }else{
+                const old_category = await db.Category.findOne({
+                    where : {
+                        name : name, 
+                        user_id : user_id
+                    }
+                });
+                const new_category = await db.Category.findOne({
+                    where : {
+                        name : new_name, 
+                        user_id : user_id
+                    }
+                });
+                if (!old_category || !new_category){
+                    res.json({msg : "category not found"})
+                }else{
+                    db.Expenses.findOne({
+                        where : {
+                            user_id : user_id,
+                            category_id : old_category.id,
+                        }
+                    }).then((expense: any) => {
+                        if(!expense){
+                            res.json({msg : "expense not found"})
+                        }else{
+                            expense.update(
+                                {
+                                    category_id : new_category.id,
+                                    amount : new_amount,
+                                    spending_date : new_spending_date,
+                                },
+                            )
+                            res.json({msg : "expense found", expense})
+                        }
+                    })
+                }
+            }
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// delete expense --- function
+const delete_expenses = async (req: any, res: any) => {
+    try{
+        const { name, user_id } = req.body
+        if (!name || !user_id){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            const user_is_exist = await db.User.findOne({
+                where : {id : user_id}
+            });
+            if (!user_is_exist){
+                res.json({msg : "user not found"})
+            }else{
+                const category = await db.Category.findOne({
+                    where : {
+                        name : name, 
+                        user_id : user_id
+                    }
+                });
+                if (!category){
+                    res.json({msg : "category not found"})
+                }else{
+                    db.Expenses.findOne({
+                        where : {
+                            user_id : user_id,
+                            category_id : category.id,
+                        }
+                    }).then((expense: any) => {
+                        if(!expense){
+                            res.json({msg : "expense not found"})
+                        }else{
+                            expense.destroy()
+                            res.json({msg : "expense deleted"})
+                        }
+                    })
+                }
+            }
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// list expenses --- function
+const list_expenses = async (req: any, res: any) => {
+    try{
+        const { user_id } = req.body
+        if (!user_id){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            let filtered_categories: any = []
+            const user = await db.User.findOne({
+                where : {id : user_id}
+            });
+            const categories = await db.Category.findAll({
+                where : {user_id : user_id}
+            })
+            categories.forEach((category: any) => {
+                filtered_categories[category.id] = (category.name)
+            });
+            await db.Expenses.findAll({
+                where : {
+                    user_id : user_id
+                }
+            }).then((expenses: any) => {
+                if (expenses.length === 0){
+                    res.json({msg : "expenses not found"})
+                }else{
+                    expenses = expenses.map((expense: any) => { 
+                        return `the ${user.name} spent ${expense.amount} JOD on ${expense.spending_date} , as a ${filtered_categories[expense.category_id]} purchase` 
+                    })
+                    res.json({msg : "expenses found", expenses})
                 }
             })
         }
@@ -236,6 +417,10 @@ app.post('/create-category',create_category) // create category
 app.put('/edit-category',edit_category) // edit category
 app.get('/get-category',get_category) // get category
 app.get('/list-category',list_category) // list category
+app.post('/create-expenses',create_expenses) // create expenses
+app.put('/edit-expenses',edit_expenses) // edit expenses
+app.delete('/delete-expenses',delete_expenses) // delete expenses
+app.get('/list-expenses',list_expenses) // list expenses
 
 db.sequelize.sync().then(() => {
     app.listen(port,() => {
