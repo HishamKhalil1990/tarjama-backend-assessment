@@ -16,13 +16,13 @@ module.exports = (sequelize : any, DataTypes : any) => {
     declare last_login : CreationOptional<Date>;
     static associate(models : any) {
       // define association here
-      User.hasMany(models.Category,{foreignKey: 'id', sourceKey: 'user_id'});
-      User.hasMany(models.Expenses,{foreignKey: 'id', sourceKey: 'user_id'});
+      User.hasMany(models.Category,{foreignKey: 'user_id', sourceKey: 'id'});
+      User.hasMany(models.Expenses,{foreignKey: 'user_id', sourceKey: 'id'});
     }
   }
   User.init({
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,

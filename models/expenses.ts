@@ -16,24 +16,24 @@ module.exports = (sequelize : any, DataTypes : any) => {
     declare amount : number;
     static associate(models : any) {
       // define association here
-      Expenses.belongsTo(models.User,{foreignKey: 'id', targetKey: 'user_id'});
-      Expenses.belongsTo(models.Category,{foreignKey: 'id', targetKey: 'category_id'});
+      Expenses.belongsTo(models.User,{foreignKey: 'user_id', targetKey: 'id'});
+      Expenses.belongsTo(models.Category,{foreignKey: 'category_id', targetKey: 'id'});
 
     }
   }
   Expenses.init({
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,
     },
     user_id:{
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     category_id:{
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     spending_date: {

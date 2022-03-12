@@ -14,19 +14,19 @@ module.exports = (sequelize : any, DataTypes : any) => {
     declare name : string;
     static associate(models : any) {
       // define association here
-      Category.belongsTo(models.User,{foreignKey: 'id', targetKey: 'user_id'});
-      Category.hasMany(models.Expenses,{foreignKey: 'id', sourceKey: 'category_id'});
+      Category.belongsTo(models.User,{foreignKey: 'user_id', targetKey: 'id'});
+      Category.hasMany(models.Expenses,{foreignKey: 'category_id', sourceKey: 'id'});
     }
   }
   Category.init({
     id: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,
     },
     user_id:{
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.INTEGER,
       allowNull: false,
     },
     name: {
