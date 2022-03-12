@@ -147,6 +147,53 @@ const edit_category = async (req: any, res: any) => {
         res.json("Error: " + err);
     }
 }
+// get category --- function
+const get_category = async (req: any, res: any) => {
+    try{
+        const { name, user_id } = req.body
+        if (!name || !user_id){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            db.Category.findOne({
+                where : {
+                    name : name,
+                    user_id : user_id
+                }
+            }).then((category: any) => {
+                if (!category){
+                    res.json({msg : "category not found"})
+                }else{
+                    res.json({msg : "category found", category})
+                }
+            })
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// list categories --- function
+const list_category = async (req: any, res: any) => {
+    try{
+        const { user_id } = req.body
+        if (!user_id){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            db.Category.findAll({
+                where : {
+                    user_id : user_id
+                }
+            }).then((categories: any) => {
+                if (categories.length === 0){
+                    res.json({msg : "categories not found"})
+                }else{
+                    res.json({msg : "categories found", categories})
+                }
+            })
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
 // create record --- function
 const create_record = async (record_type : string , data : any) => {
     switch (record_type) {
@@ -187,6 +234,8 @@ app.post('/reg',register) // register
 app.put('/login',login) // login
 app.post('/create-category',create_category) // create category
 app.put('/edit-category',edit_category) // edit category
+app.get('/get-category',get_category) // get category
+app.get('/list-category',list_category) // list category
 
 db.sequelize.sync().then(() => {
     app.listen(port,() => {
