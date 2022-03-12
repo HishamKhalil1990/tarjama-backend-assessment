@@ -33,14 +33,22 @@ const register = async (req: any, res: any) => {
         if (!name || !email || !password){
             res.status(400).json({ msg: "Please enter all fields" });
         }else{
-            const data = {
-                name : name,
-                email : email,
-                password : password,
-                last_login : new Date()
-            }
-            await create_record("user",data)
-            res.json({msg : "user registered"})
+            db.User.findOne({
+                where : {email : email}
+            }).then((user: any) => {
+                if (!user){
+                    const data = {
+                        name : name,
+                        email : email,
+                        password : password,
+                        last_login : new Date()
+                    }
+                    create_record("user",data)
+                    res.json({msg : "user registered"})
+                }else{
+                    res.json({msg : "user already exist"})
+                }
+            })
         }
     }catch(err){
         res.json("Error: " + err);
@@ -68,6 +76,70 @@ const login = (req: any, res: any) => {
                         },
                     )
                     res.json({msg : "user found", user})
+                }
+            })
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// create category --- function
+const create_category = async (req: any, res: any) => {
+    try {
+        const { name, user_id } = req.body
+        if (!name || !user_id){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            const user_is_exist = await db.User.findOne({
+                where : {id : user_id}
+            });
+            if (!user_is_exist){
+                res.json({msg : "user not found"})
+            }else{
+                const category_is_exist = await db.Category.findOne({
+                    where : {
+                        user_id : user_id,
+                        name : name
+                    }
+                });
+                if (!category_is_exist){
+                    const data = {
+                        user_id : user_id,
+                        name : name
+                    }
+                    await create_record("category",data)
+                    res.json({msg : "category created"})
+                }else{
+                    res.json({msg : "category already exist"})
+                }
+            }
+        }
+    }catch(err){
+        res.json("Error: " + err);
+    }
+}
+// edit category --- function
+const edit_category = async (req: any, res: any) => {
+    try{
+        const { name, user_id, new_name } = req.body
+        if (!name || !user_id || !new_name){
+            res.status(400).json({ msg: "Please enter all fields" });
+        }else{
+            db.Category.findOne({
+                where : {
+                    name : name,
+                    user_id : user_id
+                }
+            }).then((category: any) => {
+                if (!category){
+                    res.json({msg : "category not found"})
+                }else{
+                    category.update(
+                        {
+                            name : new_name
+                        },
+                    )
+                    res.json({msg : "category found", category})
                 }
             })
         }
@@ -112,7 +184,9 @@ if(env === "development"){
 
 // Middlewares
 app.post('/reg',register) // register
-app.post('/login',login) // login
+app.put('/login',login) // login
+app.post('/create-category',create_category) // create category
+app.put('/edit-category',edit_category) // edit category
 
 db.sequelize.sync().then(() => {
     app.listen(port,() => {
